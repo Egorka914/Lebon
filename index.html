@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="description" content="LEBON — производство упаковочных коробок в Москве. 12 лет опыта, каталог с фильтрами, корзина, доставка по РФ.">
+  <meta name="keywords" content="купить коробку, упаковочные коробки, коробки Lebon, производство коробок Москва, коробки оптом, корзина">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#1a1f2e">
+  <title>LEBON — Производство упаковочных коробок | Каталог, корзина</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #1a1f2e;
+      --bg-light: #f8f7f4;
+      --white: #ffffff;
+      --accent: #e8a850;
+      --accent-hover: #f0c070;
+      --accent-soft: #fdf3e4;
+      --text-dark: #1e1e1e;
+      --text-mid: #4a4a4a;
+      --text-light: #6b6b6b;
+      --border: #e2ddd4;
+      --border-light: #f0ebe0;
+      --shadow-sm: 0 4px 14px rgba(0,0,0,0.06);
+      --shadow-md: 0 10px 30px rgba(0,0,0,0.1);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Анимация открытия коробки */
+    .box-animation-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(26,31,46,0.96); z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeOut 0.6s ease 2.2s forwards; pointer-events: all;
+    }
+    .box-scene { position: relative; width: 160px; height: 160px; }
+    .box-lid {
+      position: absolute; width: 130px; height: 65px; background: var(--accent);
+      border-radius: 10px 10px 0 0; top: 8px; left: 15px;
+      transform-origin: left bottom; animation: openLid 0.8s ease 0.6s forwards;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.3); z-index: 2;
+    }
+    .box-body {
+      width: 130px; height: 90px; background: linear-gradient(180deg, #d4953a, #b07028);
+      border-radius: 0 0 8px 8px; position: absolute; bottom: 15px; left: 15px;
+      box-shadow: inset 0 -8px 16px rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; color: white;
+    }
+    .box-text {
+      position: absolute; bottom: -45px; color: white; font-weight: 700;
+      font-size: 1.1rem; letter-spacing: 4px; text-align: center; width: 100%;
+      animation: fadeInText 0.5s ease 1s forwards; opacity: 0;
+    }
+    @keyframes openLid { 0% { transform: rotate(0deg); } 100% { transform: rotate(-130deg); } }
+    @keyframes fadeOut { 0% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
+    @keyframes fadeInText { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+
+    /* Летающая корзина */
+    .floating-cart {
+      position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
+      z-index: 500; display: flex; flex-direction: column; align-items: center;
+      gap: 4px; background: var(--white); padding: 10px 6px;
+      border-radius: 40px; box-shadow: var(--shadow-md); border: 2px solid var(--accent);
+      cursor: pointer; transition: all 0.3s ease; width: 55px;
+    }
+    .floating-cart:hover { transform: translateY(-50%) scale(1.05); }
+    .floating-cart-count {
+      background: var(--accent); color: white; border-radius: 50%;
+      width: 22px; height: 22px; display: flex; align-items: center;
+      justify-content: center; font-size: 0.7rem; font-weight: 700;
+    }
+    .floating-cart-total { font-size: 0.6rem; font-weight: 700; color: var(--text-mid); text-align: center; }
+
+    /* Модальные окна */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); z-index: 1050; display: none;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content-custom {
+      background: var(--white); border-radius: var(--radius); max-width: 600px;
+      width: 100%; padding: 24px; position: relative;
+      animation: modalIn 0.3s ease; max-height: 85vh; overflow-y: auto;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-close {
+      position: absolute; top: 12px; right: 16px; font-size: 1.4rem;
+      cursor: pointer; background: none; border: none; color: #999; font-weight: 700; z-index: 5;
+    }
+    .modal-close:hover { color: #333; }
+
+    /* Полноэкранный каталог */
+    .fullscreen-catalog {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg-light); z-index: 1040; overflow-y: auto; display: none; padding: 16px 0;
+    }
+    .fullscreen-catalog.active { display: block; }
+    .catalog-header {
+      position: sticky; top: 0; background: var(--bg-light); z-index: 10;
+      padding: 12px 0; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 10px;
+      border-bottom: 1px solid var(--border); margin-bottom: 20px;
+    }
+
+    /* Кнопки */
+    .btn-custom {
+      background: var(--bg-dark); color: white; border: none;
+      padding: 10px 20px; font-weight: 600; cursor: pointer;
+      border-radius: 30px; transition: all 0.3s; font-family: inherit;
+      font-size: 0.85rem; white-space: nowrap;
+    }
+    .btn-custom:hover { background: #2d3548; transform: translateY(-1px); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-outline-custom { background: transparent; border: 2px solid var(--bg-dark); color: var(--bg-dark); }
+    .btn-outline-custom:hover { background: var(--bg-dark); color: white; }
+    .btn-sm-custom { padding: 6px 12px; font-size: 0.75rem; }
+
+    /* Header */
+    .site-header {
+      background: var(--bg-dark); position: sticky; top: 0; z-index: 1030;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.2); border-bottom: 2px solid var(--accent);
+    }
+    .logo {
+      font-size: 1.5rem; font-weight: 700; letter-spacing: 2px;
+      color: var(--accent); text-transform: uppercase; line-height: 1.1;
+      cursor: pointer; text-decoration: none;
+    }
+    .logo small { display: block; font-size: 0.5rem; letter-spacing: 4px; color: #8890a0; font-weight: 400; }
+    .nav-links .nav-btn {
+      color: #c0c5ce; font-weight: 500; font-size: 0.8rem; text-transform: uppercase;
+      letter-spacing: 0.5px; transition: color 0.2s; background: none; border: none;
+      cursor: pointer; font-family: inherit; padding: 6px 8px;
+    }
+    .nav-links .nav-btn:hover { color: var(--accent); }
+    .phone-btn {
+      background: var(--accent); color: #fff !important; padding: 8px 14px;
+      border-radius: 30px; font-weight: 700; text-decoration: none; font-size: 0.8rem;
+    }
+    .phone-btn:hover { background: var(--accent-hover); }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #fdf8f0 0%, #f8f7f4 100%); padding: 40px 0; }
+    .hero-image-wrapper {
+      background: #fff; border-radius: var(--radius); overflow: hidden;
+      box-shadow: 20px 20px 0 rgba(232,168,80,0.15); border: 2px solid var(--accent-soft);
+      aspect-ratio: 4/3;
+    }
+    .hero-image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Карточки товаров */
+    .product-card {
+      background: var(--white); border: 2px solid var(--border-light); border-radius: var(--radius);
+      overflow: hidden; transition: all 0.3s; cursor: pointer; height: 100%;
+      display: flex; flex-direction: column;
+    }
+    .product-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .product-card-img {
+      aspect-ratio: 4/3; background: #f0ebe0; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .product-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .product-card-body { padding: 14px; display: flex; flex-direction: column; flex: 1; }
+    .product-category-badge {
+      color: var(--accent); font-weight: 600; font-size: 0.65rem;
+      text-transform: uppercase; letter-spacing: 0.5px; background: var(--accent-soft);
+      display: inline-block; padding: 2px 8px; border-radius: 20px; align-self: flex-start;
+      margin-bottom: 6px;
+    }
+    .product-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; color: var(--bg-dark); }
+    .product-specs { font-size: 0.72rem; color: var(--text-light); margin-bottom: 6px; }
+    .product-price { font-weight: 700; font-size: 1.1rem; color: var(--bg-dark); margin-bottom: 8px; }
+    .product-opt-price { font-size: 0.72rem; color: var(--accent); font-weight: 600; margin-top: -4px; margin-bottom: 8px; }
+    .product-actions { display: flex; gap: 6px; margin-top: auto; }
+
+    /* О компании */
+    .about-section { padding: 50px 0; background: #fdf8f0; }
+    .feature-list { list-style: none; padding: 0; }
+    .feature-list li {
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.85rem;
+    }
+    .feature-list li::before { content: "✓"; color: var(--accent); font-weight: 700; }
+    .info-card { background: var(--white); padding: 20px; border-radius: var(--radius); font-size: 0.85rem; box-shadow: var(--shadow-sm); }
+
+    /* Фильтры */
+    .filter-panel {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+      background: var(--white); padding: 14px; border-radius: var(--radius);
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+    }
+    .filter-btn {
+      background: transparent; border: 2px solid #ddd; padding: 6px 12px;
+      font-weight: 600; cursor: pointer; border-radius: 30px; transition: all 0.2s;
+      font-size: 0.75rem; white-space: nowrap; font-family: inherit; color: var(--text-mid);
+    }
+    .filter-btn.active { background: var(--bg-dark); color: white; border-color: var(--bg-dark); }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active:hover { color: white; }
+    .search-input {
+      padding: 8px 14px; border: 2px solid #ddd; border-radius: 30px;
+      font-weight: 500; font-size: 0.8rem; outline: none; transition: all 0.3s;
+      background: var(--white); font-family: inherit; width: 100%;
+    }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,168,80,0.15); }
+    .search-suggestions {
+      position: absolute; top: 100%; left: 0; width: 100%; background: var(--white);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md); z-index: 50; margin-top: 4px;
+      display: none; max-height: 220px; overflow-y: auto;
+    }
+    .search-suggestions.active { display: block; }
+    .suggestion-item {
+      padding: 8px 14px; cursor: pointer; display: flex; align-items: center;
+      gap: 8px; transition: background 0.2s; border-bottom: 1px solid #f5f5f5; font-size: 0.8rem;
+    }
+    .suggestion-item:hover { background: var(--accent-soft); }
+    .highlight-match { background: #fef3c7; padding: 0 2px; border-radius: 2px; }
+
+    /* Контакты */
+    .map-container {
+      border-radius: var(--radius); overflow: hidden; border: 2px solid var(--border-light);
+      aspect-ratio: 4/3; min-height: 300px;
+    }
+    .map-container iframe { width: 100%; height: 100%; border: 0; }
+    .contact-card {
+      background: #fdf8f0; padding: 24px; border-radius: var(--radius);
+      font-size: 0.85rem; border: 2px solid var(--border-light); height: 100%;
+    }
+
+    /* Корзина */
+    .cart-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 0; border-bottom: 1px solid var(--border-light);
+    }
+    .cart-item-img {
+      width: 50px; height: 50px; border-radius: 8px; overflow: hidden;
+      background: #f0ebe0; flex-shrink: 0;
+    }
+    .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid #ddd;
+      background: white; cursor: pointer; font-weight: 700; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Форма заказа */
+    .order-form input, .order-form select {
+      padding: 10px 14px; border: 2px solid #ddd; border-radius: 10px;
+      font-size: 0.85rem; font-family: inherit; width: 100%; margin-bottom: 10px;
+    }
+    .order-form input:focus, .order-form select:focus {
+      border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(232,168,80,0.15);
+    }
+    .order-form label { font-weight: 600; font-size: 0.8rem; margin-bottom: 4px; display: block; }
+
+    /* Toast */
+    .toast-custom {
+      position: fixed; bottom: 24px; right: 24px; background: var(--bg-dark);
+      color: white; padding: 12px 20px; border-radius: 30px; font-weight: 600;
+      z-index: 2000; animation: slideUp 0.3s ease; box-shadow: var(--shadow-md);
+      font-size: 0.85rem;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    footer { background: var(--bg-dark); color: #8890a0; padding: 18px 0; text-align: center; font-size: 0.78rem; }
+
+    @media (max-width: 768px) {
+      .floating-cart { left: 6px; padding: 8px 4px; width: 46px; }
+      .floating-cart-count { width: 18px; height: 18px; font-size: 0.65rem; }
+      .floating-cart-total { font-size: 0.55rem; }
+      .hero-image-wrapper { aspect-ratio: 1/1; }
+      .product-card-img { aspect-ratio: 1/1; }
+      .map-container { aspect-ratio: 1/1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Анимация открытия -->
+  <div class="box-animation-overlay" aria-hidden="true">
+    <div class="box-scene"><div class="box-lid"></div><div class="box-body">📦</div><div class="box-text">LEBON</div></div>
+  </div>
+
+  <!-- Летающая корзина -->
+  <div class="floating-cart" id="floatingCart" title="Открыть корзину">
+    <span>🛒</span>
+    <span class="floating-cart-count" id="floatingCartCount">0</span>
+    <span class="floating-cart-total" id="floatingCartTotal">0 ₽</span>
+  </div>
+
+  <!-- Модальные окна -->
+  <div class="modal-overlay" id="productModal"><div class="modal-content-custom" id="modalContent"></div></div>
+  <div class="modal-overlay" id="cartModal"><div class="modal-content-custom" id="cartModalContent" style="max-width:650px;"></div></div>
+  <div class="modal-overlay" id="orderModal"><div class="modal-content-custom" id="orderModalContent" style="max-width:550px;"></div></div>
+
+  <!-- Полноэкранный каталог -->
+  <div class="fullscreen-catalog" id="fullscreenCatalog">
+    <div class="container">
+      <div class="catalog-header">
+        <h2 class="h5 fw-bold mb-0">Каталог упаковочных коробок</h2>
+        <button class="btn-custom" id="closeCatalogBtn">← На главную</button>
+      </div>
+      <!-- Фильтры -->
+      <div class="filter-panel">
+        <div class="d-flex gap-2 flex-wrap" id="fullscreenCategoryFilters">
+          <button class="filter-btn active" data-filter="all">Все</button>
+          <button class="filter-btn" data-filter="Премиум мелованный">Премиум мелованный</button>
+          <button class="filter-btn" data-filter="Премиум крафт">Премиум крафт</button>
+          <button class="filter-btn" data-filter="Стандарт белый">Стандарт белый</button>
+          <button class="filter-btn" data-filter="Стандарт бурый">Стандарт бурый</button>
+          <button class="filter-btn" data-filter="Вкладыши">Вкладыши</button>
+        </div>
+        <div class="position-relative ms-auto" style="width:100%; max-width:220px;">
+          <input type="text" class="search-input" id="fullscreenSearchInput" placeholder="Поиск по размеру..." autocomplete="off">
+          <div class="search-suggestions" id="fullscreenSuggestions"></div>
+        </div>
+      </div>
+      <!-- Сетка товаров -->
+      <div class="row g-3" id="fullscreenProductsContainer"></div>
+      <div class="text-center py-4 text-muted d-none" id="fullscreenNoResults">Коробки не найдены. Измените параметры поиска.</div>
+    </div>
+  </div>
+
+  <!-- Страница контактов -->
+  <div class="contacts-page" id="contactsPage" style="display:none; padding:40px 0; background:var(--white); min-height:80vh;">
+    <div class="container">
+      <button class="btn-custom btn-outline-custom mb-3" id="contactsBackBtn">← На главную</button>
+      <h2 class="text-center fw-bold mb-4" style="font-size:1.6rem;">Контакты и режим работы</h2>
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="map-container">
+            <iframe src="https://yandex.ru/map-widget/v1/?ll=37.617700%2C55.755800&z=15&pt=37.617700,55.755800,pm2rdm&l=map" allowfullscreen loading="lazy" title="Карта"></iframe>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="contact-card">
+            <h4 class="fw-bold">Центральный офис и производство</h4>
+            <p class="mt-2 mb-1">📍 г. Москва, ул. Производственная, д. 15, стр. 3</p>
+            <p class="mb-1">📞 +7 (988) 250-38-17</p>
+              <p class="mb-1">📞 +7 (928) 624-75-77 </p>
+            <p class="mb-1">📧 order@lebon-pack.ru</p>
+            <hr>
+            <h5 class="fw-bold">Режим работы</h5>
+            <p class="mb-1">Пн–Пт: 9:00 – 19:00</p>
+            <p class="mb-1">Сб: 10:00 – 16:00</p>
+            <p>Вс: выходной</p>
+            <hr>
+            <button class="btn-custom btn-accent w-100" onclick="showToast('📞 Заявка отправлена! Мы перезвоним.')">Заказать звонок</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center py-2 flex-wrap gap-2">
+        <div class="logo" id="logoBtn">LEBON<small>упаковочные системы</small></div>
+        <nav class="nav-links d-flex gap-2 align-items-center flex-wrap">
+          <button class="nav-btn" id="catalogMenuBtn">Каталог</button>
+          <button class="nav-btn" id="contactsMenuBtn">Контакты</button>
+          <a href="tel:+74951234567" class="phone-btn">+7 (988) 250-38-17</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Главный контент -->
+  <main id="mainContent">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-6 text-center text-lg-start">
+            <h1 class="fw-bold" style="font-size:2rem; line-height:1.2;">Производство <span style="color:var(--accent); border-bottom:3px solid var(--accent);">упаковочных коробок</span> с гарантией</h1>
+            <p class="text-muted" style="font-size:0.95rem;">LEBON — 12 лет создаем коробки для бизнеса. От дизайна до доставки за 3 дня.</p>
+            <div class="d-flex gap-3 justify-content-center justify-content-lg-start mb-3 flex-wrap">
+              <div class="text-center"><span class="fw-bold" style="font-size:1.6rem; color:var(--accent);">12+</span><br><small>лет опыта</small></div>
+              <div class="text-center"><span class="fw-bold" style="font-size:1.6rem; color:var(--accent);">850+</span><br><small>клиентов</small></div>
+              <div class="text-center"><span class="fw-bold" style="font-size:1.6rem; color:var(--accent);">3 дня</span><br><small>изготовление</small></div>
+            </div>
+            <button class="btn-custom btn-accent" id="heroCatalogBtn">Открыть каталог</button>
+          </div>
+          <div class="col-lg-6">
+            <div class="hero-image-wrapper">
+              <img src="foto/logo.jpg" alt="Упаковочные коробки LEBON" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:100%;font-size:4rem;>📦</div>';">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Популярные коробки -->
+    <section class="py-5 bg-white">
+      <div class="container">
+        <h2 class="text-center fw-bold mb-4" style="font-size:1.6rem;">Популярные коробки</h2>
+        <div class="row g-3" id="homeCardsGrid"></div>
+        <div class="text-center mt-4">
+          <button class="btn-custom" id="homeOpenCatalogBtn">Смотреть весь каталог</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- О компании -->
+    <section class="about-section">
+      <div class="container">
+        <h2 class="text-center fw-bold mb-4" style="font-size:1.6rem;">О компании LEBON</h2>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <p style="font-size:0.9rem;">Специализируемся на проектировании и производстве упаковочных коробок из картона, микрогофрокартона и дизайнерских материалов.</p>
+            <ul class="feature-list">
+              <li>Разработка конструкции под ваш товар</li>
+              <li>Полноцветная печать (CMYK + Pantone)</li>
+              <li>Ламинирование, тиснение, конгрев</li>
+              <li>Доставка по РФ транспортными компаниями</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <div class="info-card">
+              <h5 class="fw-bold">Производственная база</h5>
+              <p class="mb-1">🏭 1200 м² площадей</p>
+              <p class="mb-1">🖨️ 5 печатных линий</p>
+              <p class="mb-1">📐 Конструкторское бюро</p>
+              <p>✅ Сертификаты ISO 9001, FSC</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container"><p class="mb-0">© 2013–2026 LEBON Упаковочные системы. Производство коробок в Москве.</p></div>
+  </footer>
+
+  <script>
+    (function() {
+      // ==================== КАТАЛОГ ТОВАРОВ ====================
+      // Фото лежат в папке foto/ с номерами от 1 до 16
+      const products = [
+        { id:1,  name:"Коробка 37×37×8 Премиум мелованная",  category:"Премиум мелованный", price:90.9,  optPrice:68.6, image:"foto/10.jpg",  specs:"Профиль Е Т-26, белая внутри", desc:"Премиум картон. Верхний слой мелованный. Трехслойный целлюлозный микрогофрокартон.", material:"Мелованный картон, профиль Е Т-26", size:"370×370×80 мм", minOrder:"от 500 шт (опт)", delivery:"3-5 дней", keywords:"37х37 премиум мелованный" },
+        { id:2,  name:"Коробка 30×30×8 Премиум мелованная",  category:"Премиум мелованный", price:81.9,  optPrice:73.8, image:"foto/10.jpg",  specs:"Профиль Е Т-26, белая внутри", desc:"Премиум картон. Верхний слой мелованный. Трехслойный целлюлозный микрогофрокартон.", material:"Мелованный картон, профиль Е Т-26", size:"300×300×80 мм", minOrder:"от 500 шт (опт)", delivery:"3-5 дней", keywords:"30х30 премиум мелованный" },
+        { id:3,  name:"Коробка 25×25×8 Премиум мелованная",  category:"Премиум мелованный", price:76.2,  optPrice:68.6, image:"foto/10.jpg",  specs:"Профиль Е Т-26, белая внутри", desc:"Премиум картон. Верхний слой мелованный. Трехслойный целлюлозный микрогофрокартон.", material:"Мелованный картон, профиль Е Т-26", size:"250×250×80 мм", minOrder:"от 500 шт (опт)", delivery:"3-5 дней", keywords:"25х25 премиум мелованный" },
+        { id:4,  name:"Коробка 37×37×8 Премиум крафт",        category:"Премиум крафт",     price:55,    optPrice:50.4, image:"foto/20.jpg",  specs:"Профиль Е Т-24, бурая внутри", desc:"Премиум картон. Верхний слой крафтовый. Трехслойный целлюлозный микрогофрокартон.", material:"Крафтовый картон, профиль Е Т-24", size:"370×370×80 мм", minOrder:"от 500 шт (опт)", delivery:"3-5 дней", keywords:"37х37 премиум крафт" },
+        { id:5,  name:"Коробка 30×30×8 Премиум крафт",        category:"Премиум крафт",     price:47.9,  optPrice:44.7, image:"foto/20.jpg",  specs:"Профиль Е Т-24, бурая внутри", desc:"Премиум картон. Верхний слой крафтовый. Трехслойный целлюлозный микрогофрокартон.", material:"Крафтовый картон, профиль Е Т-24", size:"300×300×80 мм", minOrder:"от 500 шт (опт)", delivery:"3-5 дней", keywords:"30х30 премиум крафт" },
+        { id:6,  name:"Коробка 25×25×8 Премиум крафт",        category:"Премиум крафт",     price:44,    optPrice:41,   image:"foto/20.jpg",  specs:"Профиль Е Т-24, бурая внутри", desc:"Премиум картон. Верхний слой крафтовый. Трехслойный целлюлозный микрогофрокартон.", material:"Крафтовый картон, профиль Е Т-24", size:"250×250×80 мм", minOrder:"от 500 шт (опт)", delivery:"3-5 дней", keywords:"25х25 премиум крафт" },
+        { id:7,  name:"Коробка 37×37×8 Стандарт белая",       category:"Стандарт белый",    price:63.6,  optPrice:58.2, image:"foto/30.jpg",  specs:"Профиль Е Т-23, белая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри белая.", material:"Целлюлозный картон, профиль Е Т-23", size:"370×370×80 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"37х37 стандарт белый" },
+        { id:8,  name:"Коробка 30×30×8 Стандарт белая",       category:"Стандарт белый",    price:53.3,  optPrice:48.9, image:"foto/30.jpg",  specs:"Профиль Е Т-23, белая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри белая.", material:"Целлюлозный картон, профиль Е Т-23", size:"300×300×80 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"30х30 стандарт белый" },
+        { id:9,  name:"Коробка 25×25×8 Стандарт белая",       category:"Стандарт белый",    price:51.1,  optPrice:46.5, image:"foto/30.jpg",  specs:"Профиль Е Т-23, белая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри белая.", material:"Целлюлозный картон, профиль Е Т-23", size:"250×250×80 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"25х25 стандарт белый" },
+        { id:10, name:"Коробка 37×37×8 Стандарт бурая",       category:"Стандарт бурый",    price:56,    optPrice:50.8, image:"foto/50.jpg", specs:"Профиль Е Т-24, бурая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри бурая.", material:"Целлюлозный картон, профиль Е Т-24", size:"370×370×80 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"37х37 стандарт бурый" },
+        { id:11, name:"Коробка 30×30×8 Стандарт бурая",       category:"Стандарт бурый",    price:48.9,  optPrice:44.7, image:"foto/50.jpg", specs:"Профиль Е Т-24, бурая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри бурая.", material:"Целлюлозный картон, профиль Е Т-24", size:"300×300×80 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"30х30 стандарт бурый" },
+        { id:12, name:"Коробка 25×25×8 Стандарт бурая",       category:"Стандарт бурый",    price:44.7,  optPrice:41,   image:"foto/50.jpg", specs:"Профиль Е Т-24, бурая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри бурая.", material:"Целлюлозный картон, профиль Е Т-24", size:"250×250×80 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"25х25 стандарт бурый" },
+        { id:13, name:"Вкладыш 30×30×8",                      category:"Вкладыши",          price:26.3,  optPrice:23,   image:"foto/60.jpg", specs:"Профиль Е Т-24",              desc:"Вкладыш из трехслойного целлюлозного микрогофрокартона.", material:"Целлюлозный микрогофрокартон", size:"300×300×80 мм", minOrder:"от 100 шт", delivery:"2-3 дня", keywords:"вкладыш 30х30" },
+        { id:14, name:"Разделитель для коробки 30×30",         category:"Вкладыши",          price:8,     optPrice:6.6,  image:"foto/70.jpg", specs:"Высота 6 см, картон 320 г/м²", desc:"Разделитель из картона плотностью 320 г/м².", material:"Картон 320 г/м²", size:"300×300×60 мм", minOrder:"от 100 шт", delivery:"2-3 дня", keywords:"разделитель 30х30" },
+        { id:15, name:"Разделитель для коробки 37×37",         category:"Вкладыши",          price:8.9,   optPrice:7.3,  image:"foto/70.jpg", specs:"Высота 6 см, картон 320 г/м²", desc:"Разделитель из картона плотностью 320 г/м².", material:"Картон 320 г/м²", size:"370×370×60 мм", minOrder:"от 100 шт", delivery:"2-3 дня", keywords:"разделитель 37х37" },
+        { id:16, name:"Коробка 30×30×5 белая",                category:"Стандарт белый",    price:58.2,  optPrice:55.6, image:"foto/80.jpg", specs:"Профиль Е Т-23, белая внутри", desc:"Трехслойный целлюлозный микрогофрокартон, внутри белая.", material:"Целлюлозный картон, профиль Е Т-23", size:"300×300×50 мм", minOrder:"от 500 шт (опт)", delivery:"2-3 дня", keywords:"30х30х5 белый" },
+        { id:17, name:"Самосборная коробка 40×30×20",         category:"Стандарт белый",    price:75.0,  optPrice:65.0, image:"foto/90.webp", specs:"Самосбор, профиль Е Т-23",     desc:"Самосборная коробка из трехслойного микрогофрокартона. Быстрая сборка.", material:"Целлюлозный картон, профиль Е Т-23", size:"400×300×200 мм", minOrder:"от 100 шт", delivery:"2-4 дня", keywords:"самосборная 40х30х20" },
+      ];
+
+      // ==================== КОРЗИНА ====================
+      let cart = JSON.parse(localStorage.getItem('lebon_cart_final') || '[]');
+      function saveCart() { localStorage.setItem('lebon_cart_final', JSON.stringify(cart)); }
+      function getCartTotal() { return cart.reduce((sum, i) => sum + i.price * i.qty, 0); }
+      function getCartCount() { return cart.reduce((sum, i) => sum + i.qty, 0); }
+      function updateFloatingCart() {
+        document.getElementById('floatingCartCount').textContent = getCartCount();
+        document.getElementById('floatingCartTotal').textContent = getCartTotal().toFixed(2) + ' ₽';
+      }
+
+      function addToCart(product, qty = 1) {
+        const existing = cart.find(i => i.id === product.id);
+        if (existing) existing.qty += qty;
+        else cart.push({...product, qty});
+        saveCart(); updateFloatingCart();
+        showToast(product.name + ' добавлена в корзину');
+      }
+
+      window.showToast = function(msg) {
+        const t = document.createElement('div'); t.className = 'toast-custom'; t.textContent = msg;
+        document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
+      };
+
+      // ==================== ОФОРМЛЕНИЕ ЗАКАЗА ====================
+      window.renderOrderForm = function() {
+        const content = document.getElementById('orderModalContent');
+        content.innerHTML = `
+          <button class="modal-close" onclick="document.getElementById('orderModal').classList.remove('active')">✕</button>
+          <h4 class="fw-bold mb-3">Оформление заказа</h4>
+          <p class="text-muted small">Сумма: <strong>${getCartTotal().toFixed(2)} ₽</strong> | Товаров: <strong>${getCartCount()} шт.</strong></p>
+          <div class="order-form">
+            <label>ФИО *</label>
+            <input type="text" id="orderName" placeholder="Иванов Иван Иванович" required>
+            <label>Телефон *</label>
+            <input type="tel" id="orderPhone" placeholder="+7 (___) ___-__-__" required>
+            <label>Email</label>
+            <input type="email" id="orderEmail" placeholder="example@mail.ru">
+            <h5 class="fw-bold mt-3 mb-2">Способ получения</h5>
+            <div class="d-flex gap-3 mb-3">
+              <label style="cursor:pointer;"><input type="radio" name="deliveryType" value="delivery" checked onchange="window.toggleDeliveryForm()"> Доставка</label>
+              <label style="cursor:pointer;"><input type="radio" name="deliveryType" value="pickup" onchange="window.toggleDeliveryForm()"> Самовывоз</label>
+            </div>
+            <div id="deliveryForm">
+              <label>Улица *</label>
+              <div class="row g-2">
+                <div class="col-8"><input type="text" id="orderStreet" placeholder="Улица" required></div>
+                <div class="col-4"><input type="text" id="orderHouse" placeholder="Дом" required></div>
+              </div>
+              <div class="row g-2">
+                <div class="col-4"><input type="text" id="orderEntrance" placeholder="Подъезд"></div>
+                <div class="col-4"><input type="text" id="orderFloor" placeholder="Этаж"></div>
+                <div class="col-4"><input type="text" id="orderApartment" placeholder="Квартира"></div>
+              </div>
+            </div>
+            <div id="pickupForm" style="display:none;">
+              <div class="p-3 rounded-3" style="background:#fdf8f0;">
+                <p class="mb-1"><strong>Адрес самовывоза:</strong><br>г. Москва, ул. Производственная, д. 15, стр. 3</p>
+                <p class="mb-0"><strong>Режим работы:</strong><br>Пн–Пт: 9:00–19:00, Сб: 10:00–16:00</p>
+              </div>
+            </div>
+            <button class="btn-custom btn-accent w-100 mt-3" id="submitOrderBtn">Подтвердить заказ</button>
+          </div>`;
+        
+        document.getElementById('submitOrderBtn').addEventListener('click', function(e) {
+          e.preventDefault();
+          window.submitOrder();
+        });
+        
+        document.getElementById('orderModal').classList.add('active');
+      };
+
+      window.toggleDeliveryForm = function() {
+        const type = document.querySelector('input[name="deliveryType"]:checked');
+        if (!type) return;
+        document.getElementById('deliveryForm').style.display = type.value === 'delivery' ? 'block' : 'none';
+        document.getElementById('pickupForm').style.display = type.value === 'pickup' ? 'block' : 'none';
+      };
+
+      window.submitOrder = function() {
+        const name = document.getElementById('orderName')?.value.trim();
+        const phone = document.getElementById('orderPhone')?.value.trim();
+        const email = document.getElementById('orderEmail')?.value.trim();
+        
+        if (!name) { alert('Укажите ФИО'); return; }
+        if (!phone) { alert('Укажите номер телефона'); return; }
+        
+        const type = document.querySelector('input[name="deliveryType"]:checked')?.value || 'delivery';
+        let address = '';
+        if (type === 'delivery') {
+          const street = document.getElementById('orderStreet')?.value.trim();
+          const house = document.getElementById('orderHouse')?.value.trim();
+          if (!street || !house) { alert('Укажите улицу и номер дома'); return; }
+          address = `ул. ${street}, д. ${house}, под. ${document.getElementById('orderEntrance')?.value || '-'}, эт. ${document.getElementById('orderFloor')?.value || '-'}, кв. ${document.getElementById('orderApartment')?.value || '-'}`;
+        } else {
+          address = 'Самовывоз: г. Москва, ул. Производственная, д. 15, стр. 3';
+        }
+        
+        const orderText = cart.map(i => `${i.name} x${i.qty} шт. — ${(i.price * i.qty).toFixed(2)} ₽`).join('\n');
+        alert(`✅ Заказ оформлен!\n\n📋 Состав:\n${orderText}\n\n💰 Итого: ${getCartTotal().toFixed(2)} ₽\n\n👤 ${name}\n📞 ${phone}\n📧 ${email || 'не указан'}\n📍 ${address}\n\nМенеджер свяжется с вами!`);
+        
+        cart = []; saveCart(); updateFloatingCart();
+        document.getElementById('orderModal').classList.remove('active');
+        document.getElementById('cartModal').classList.remove('active');
+      };
+
+      // ==================== МОДАЛКА КОРЗИНЫ ====================
+      function renderCartModal() {
+        const content = document.getElementById('cartModalContent');
+        if (cart.length === 0) {
+          content.innerHTML = `<button class="modal-close" onclick="document.getElementById('cartModal').classList.remove('active')">✕</button><h4 class="text-center">Корзина пуста</h4><p class="text-center text-muted">Добавьте коробки из каталога</p>`;
+          return;
+        }
+        content.innerHTML = `
+          <button class="modal-close" onclick="document.getElementById('cartModal').classList.remove('active')">✕</button>
+          <h4 class="fw-bold mb-3">Ваша корзина</h4>
+          ${cart.map(i => `
+            <div class="cart-item">
+              <div class="cart-item-img"><img src="${i.image}" alt="${i.name}" onerror="this.style.display='none';"></div>
+              <div class="flex-grow-1"><strong>${i.name}</strong><div class="text-muted" style="font-size:0.7rem;">${i.category} | ${i.price.toFixed(2)} ₽/шт</div></div>
+              <div class="d-flex align-items-center gap-2">
+                <button class="qty-btn" onclick="window.cartUpdateQty(${i.id},-1)">−</button>
+                <span class="fw-bold">${i.qty}</span>
+                <button class="qty-btn" onclick="window.cartUpdateQty(${i.id},1)">+</button>
+                <button class="btn btn-link text-danger p-0" onclick="window.cartRemove(${i.id})">✕</button>
+              </div>
+              <div class="fw-bold text-end" style="min-width:70px;">${(i.price * i.qty).toFixed(2)} ₽</div>
+            </div>
+          `).join('')}
+          <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <strong class="fs-5">Итого: ${getCartTotal().toFixed(2)} ₽</strong>
+            <button class="btn-custom btn-accent" id="checkoutBtn">Оформить заказ</button>
+          </div>`;
+        
+        document.getElementById('checkoutBtn').addEventListener('click', function(e) {
+          e.preventDefault();
+          document.getElementById('cartModal').classList.remove('active');
+          window.renderOrderForm();
+        });
+      }
+
+      window.cartUpdateQty = (id, d) => {
+        const item = cart.find(i => i.id === id);
+        if (!item) return;
+        item.qty += d;
+        if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+        saveCart(); updateFloatingCart(); renderCartModal();
+      };
+      window.cartRemove = (id) => { cart = cart.filter(i => i.id !== id); saveCart(); updateFloatingCart(); renderCartModal(); };
+
+      // ==================== МОДАЛКА ТОВАРА ====================
+      function openProductModal(p) {
+        document.getElementById('modalContent').innerHTML = `
+          <button class="modal-close" onclick="document.getElementById('productModal').classList.remove('active')">✕</button>
+          <div class="product-card-img rounded-3 mb-3" style="height:200px;"><img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;>📦</div>';"></div>
+          <span class="product-category-badge">${p.category}</span>
+          <h4 class="fw-bold mt-1 mb-2">${p.name}</h4>
+          <p class="text-muted small">${p.desc}</p>
+          <div class="p-3 rounded-3 mb-3" style="background:#fdf8f0;">
+            <p class="mb-1 small"><strong>Материал:</strong> ${p.material}</p>
+            <p class="mb-1 small"><strong>Размеры:</strong> ${p.size}</p>
+            <p class="mb-1 small"><strong>Мин. заказ:</strong> ${p.minOrder}</p>
+            <p class="mb-1 small"><strong>Доставка:</strong> ${p.delivery}</p>
+            <p class="mb-1"><strong>Розница:</strong> <span class="fw-bold fs-5">${p.price.toFixed(2)} ₽/шт</span></p>
+            ${p.optPrice ? `<p class="mb-0"><strong>Опт (от 500 шт):</strong> <span class="fw-bold" style="color:var(--accent);">${p.optPrice.toFixed(2)} ₽/шт</span></p>` : ''}
+          </div>
+          <button class="btn-custom btn-accent w-100" onclick="window.addToCartById(${p.id});document.getElementById('productModal').classList.remove('active');">Добавить в корзину</button>`;
+        document.getElementById('productModal').classList.add('active');
+      }
+
+      window.addToCartById = (id) => { const p = products.find(x => x.id === id); if (p) addToCart(p); };
+      window.openProductModal = (id) => { const p = products.find(x => x.id === id); if (p) openProductModal(p); };
+
+      // ==================== РЕНДЕР КАРТОЧЕК ====================
+      function createProductCard(p) {
+        return `
+          <div class="col-6 col-md-4 col-lg-3">
+            <div class="product-card" onclick="window.openProductModal(${p.id})">
+              <div class="product-card-img"><img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;>📦</div>';"></div>
+              <div class="product-card-body">
+                <span class="product-category-badge">${p.category}</span>
+                <h3 class="product-title">${p.name}</h3>
+                <p class="product-specs">${p.specs}</p>
+                <div class="product-price">${p.price.toFixed(2)} ₽/шт</div>
+                ${p.optPrice ? `<div class="product-opt-price">Опт: ${p.optPrice.toFixed(2)} ₽/шт</div>` : ''}
+                <div class="product-actions">
+                  <button class="btn-custom btn-sm-custom" onclick="event.stopPropagation();window.openProductModal(${p.id})" style="flex:1;">Подробнее</button>
+                  <button class="btn-custom btn-accent btn-sm-custom" onclick="event.stopPropagation();window.addToCartById(${p.id})">В корзину</button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function renderHomeCards() {
+        // Теперь отображаем ВСЕ товары на главной, чтобы ничего не пропустить
+        // Для красоты можно показывать первые 8 или все 16
+        // Я покажу все 16, но вы можете ограничить, например, slice(0, 8)
+        const homeProducts = products; // Все товары
+        document.getElementById('homeCardsGrid').innerHTML = homeProducts.map(p => createProductCard(p)).join('');
+      }
+
+      function renderFullscreenCatalog() {
+        const container = document.getElementById('fullscreenProductsContainer');
+        const noResults = document.getElementById('fullscreenNoResults');
+        const activeBtn = document.querySelector('#fullscreenCategoryFilters .filter-btn.active');
+        const cat = activeBtn ? activeBtn.dataset.filter : 'all';
+        const q = document.getElementById('fullscreenSearchInput').value.trim().toLowerCase();
+        
+        let filtered = products.filter(p => {
+          const cm = cat === 'all' || p.category === cat;
+          if (!q || q.length < 2) return cm;
+          return cm && `${p.name} ${p.category} ${p.size} ${p.keywords}`.toLowerCase().includes(q);
+        });
+        
+        if (!filtered.length) { container.innerHTML = ''; noResults.classList.remove('d-none'); return; }
+        noResults.classList.add('d-none');
+        container.innerHTML = filtered.map(p => createProductCard(p)).join('');
+      }
+
+      // ==================== ПОИСК ====================
+      const searchInput = document.getElementById('fullscreenSearchInput');
+      const suggestions = document.getElementById('fullscreenSuggestions');
+      let searchTimer;
+      
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          const q = this.value.trim().toLowerCase();
+          if (q.length < 2) { suggestions.classList.remove('active'); renderFullscreenCatalog(); return; }
+          const results = products.filter(p => `${p.name} ${p.category} ${p.keywords}`.toLowerCase().includes(q)).slice(0, 5);
+          suggestions.innerHTML = results.length ? results.map(p => `<div class="suggestion-item" data-id="${p.id}"><span>📦</span><div><div>${p.name.replace(new RegExp(q, 'gi'), m => '<span class="highlight-match">'+m+'</span>')}</div><div style="font-size:0.7rem;color:var(--accent);">${p.category} — ${p.price.toFixed(2)} ₽</div></div></div>`).join('') : '<div class="p-2 text-center text-muted">Ничего не найдено</div>';
+          suggestions.classList.add('active');
+          renderFullscreenCatalog();
+        }, 200);
+      });
+      
+      suggestions.addEventListener('click', e => {
+        const item = e.target.closest('.suggestion-item');
+        if (item) { const p = products.find(x => x.id === parseInt(item.dataset.id)); if (p) { searchInput.value = p.name; suggestions.classList.remove('active'); openProductModal(p); } }
+      });
+      
+      document.addEventListener('click', e => { if (!e.target.closest('.position-relative')) suggestions.classList.remove('active'); });
+
+      // ==================== ФИЛЬТРЫ ====================
+      document.querySelectorAll('#fullscreenCategoryFilters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('#fullscreenCategoryFilters .filter-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          renderFullscreenCatalog();
+        });
+      });
+
+      // ==================== НАВИГАЦИЯ ====================
+      const mainContent = document.getElementById('mainContent');
+      const contactsPage = document.getElementById('contactsPage');
+      const fullscreenCatalog = document.getElementById('fullscreenCatalog');
+      
+      function showMainPage() { mainContent.style.display='block'; contactsPage.style.display='none'; fullscreenCatalog.classList.remove('active'); }
+      function showContactsPage() { mainContent.style.display='none'; contactsPage.style.display='block'; fullscreenCatalog.classList.remove('active'); }
+      function showFullscreenCatalog() { mainContent.style.display='none'; contactsPage.style.display='none'; fullscreenCatalog.classList.add('active'); renderFullscreenCatalog(); }
+
+      document.getElementById('logoBtn').addEventListener('click', showMainPage);
+      document.getElementById('contactsMenuBtn').addEventListener('click', showContactsPage);
+      document.getElementById('catalogMenuBtn').addEventListener('click', showFullscreenCatalog);
+      document.getElementById('heroCatalogBtn').addEventListener('click', showFullscreenCatalog);
+      document.getElementById('homeOpenCatalogBtn').addEventListener('click', showFullscreenCatalog);
+      document.getElementById('closeCatalogBtn').addEventListener('click', showMainPage);
+      document.getElementById('contactsBackBtn').addEventListener('click', showMainPage);
+      document.getElementById('floatingCart').addEventListener('click', () => { renderCartModal(); document.getElementById('cartModal').classList.add('active'); });
+
+      // Закрытие модалок по оверлею
+      ['productModal','cartModal','orderModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+      });
+
+      // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+      updateFloatingCart();
+      renderHomeCards();
+      setTimeout(() => { const o = document.querySelector('.box-animation-overlay'); if (o) o.style.display = 'none'; }, 3000);
+      showMainPage();
+    })();
+  </script>
+</body>
+</html>
